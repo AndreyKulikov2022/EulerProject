@@ -1,0 +1,14 @@
+function [ro0, rou0, rov0, E0]=InitializeCyl(Nx, Ny, gamma, roi, roui, rovi, pi,roo, rouo, rovo, po,X,Y)
+Ei=energy(roi,roui,rovi,pi,gamma);
+Eo=energy(roo,rouo,rovo,po,gamma);
+ro0=gpuArray(roo*ones(Ny+1,Nx+1));
+rou0=gpuArray(rouo*ones(Ny+1,Nx+1));
+rov0=gpuArray(rovo*ones(Ny+1,Nx+1));
+E0=gpuArray(Eo*ones(Ny+1,Nx+1));
+% Change state in a circle in the middle
+XY=[reshape(X,[],1),reshape(Y,[],1)];
+CXY=[(max(X,[],"all")+min(X,[],"all"))/2,(max(Y,[],"all")+min(Y,[],"all"))/2];
+r=0.1*min(max(X,[],"all")-min(X,[],"all"),max(Y,[],"all")-min(Y,[],"all"));
+circle=polybuffer(CXY,"point",r);
+id_in=isinterior(circle,reshape(X,[],1),reshape(Y,[],1));
+id_in=reshape(id_in,Ny+1,Nx+1);

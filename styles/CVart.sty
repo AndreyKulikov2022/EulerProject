@@ -1,0 +1,44 @@
+\usepackage[pdftex,unicode,bookmarks=true,bookmarksopen=true,colorlinks=true,linkcolor=blue,urlcolor=black,citecolor=blue]{hyperref}
+\usepackage{longtable}
+\usepackage{fancyhdr}
+\fancyhead{}
+\fancyfoot{}
+\fancyhead[R]{\PIC{ngrs_logo.png}}
+\headheight = 4cm
+\headsep = 0cm
+\textheight = 609pt
+\footskip = 1cm
+\renewcommand{\headrulewidth}{0pt}
+
+
+
+
+\fancyfoot[C]{\begin{verse}\noindent\footnotesize{\textbf{Конфиденциально:} Данный документ предназначен для эксклюзивного использования указанным получателем (Лайф Среда) и подразумевает абсолютную конфиденциальность. Информация, содержащаяся в документе, подготовлена компанией NGRS, но может нуждаться в уточнении или коррекции. Распространение или копирование данного документа и его отдельных частей является недопустимым.}\end{verse}}
+\pagestyle{fancy}
+
+\newcommand{\separ}{ }\newcommand{\Separ}{ }
+%\renewcommand{\familydefault}{\cmfrdefault}
+\newenvironment{info}{\begin{longtable}{|p{6.5em}|p{38.5em}|}\hline\endhead\hline\endfoot }{\hline \end{longtable}}
+\newcommand{\name}[1]{\textbf{\Huge #1}}
+
+\newcommand{\putkeyskill}[2][ ]{ & #2 \\#1}
+\newcommand{\keyskills}{\hline\multicolumn{2}{|c|}{\vphantom{$\bigg|$}{\Large\textbf{\textsc{Ключевые навыки}}}}\\\hline}
+\newcommand{\periodinfirm}[2]{#1 & \vphantom{$\Big|$}\textbf{\large#2}\\*}
+\newcommand{\firmdesc}[1]{ }
+\newcommand{\profession}[1]{  & \textit{\large #1} \\*}
+\newcommand{\dutiestitle}{ & \textbf{Обязанности:} \\*}
+\newcommand{\duty}[2][ ]{ & {#2}\\#1}
+\newcommand{\hreF}[1]{\href{#1}{#1}}
+
+\newcommand{\PIC}[1]{\includegraphics{#1}}
+\newcommand{\ITEM}{\hspace{1ex}$\bullet$\hspace{1ex}}
+\newcommand{\STRONG}[1]{\textbf{#1}}
+\newcommand{\Languages}{\hline & \textbf{Знание языков}\\*}
+\newcommand{\Language}[1]{ &\ITEM{} #1\\}
+\newcommand{\education}{\hline\multicolumn{2}{|c|}{\vphantom{$\bigg|$}{\Large\textbf{\textsc{Образование}}}}\\*\hline}
+\newcommand{\upgrades}{\hline\multicolumn{2}{|c|}{\vphantom{$\Big|$}{\large\textbf{\textsc{Повышение квалификации, курсы}}}}\\*\hline}
+\newcommand{\upgrade}[3]{ #1 &#2 (\textit{#3})\\}
+\newcommand{\periodofstud}[3]{#1 & \vphantom{$\bigg|$}\textbf{\large#2}\\ & #3\\}
+\newcommand{\experience}{\hline\multicolumn{2}{|c|}{\vphantom{$\bigg|$}{\Large\textbf{\textsc{Опыт работы}}}}\\*\hline}
+
+\newcommand{\picname}[2]{\renewcommand{\separ}{\\[1ex]}\begin{figure}[H]\centering\begin{minipage}{0.20\textwidth}\PIC{#1}\end{minipage}\qquad\begin{minipage}{0.7\textwidth}\name{#2}\end{minipage}\end{figure}}

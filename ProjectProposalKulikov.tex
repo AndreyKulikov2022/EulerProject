@@ -1,0 +1,177 @@
+\documentclass[10pt]{article}
+\input{styles/AESh.sty}
+\DeclareMathOperator{\Arctg}{Arctg}
+\makeatletter
+\renewcommand\subsection{\@startsection {subsection}{1}{\z@}%
+	{-2ex \@plus -1ex \@minus -.5ex}%
+	{.3ex \@plus.2ex \@minus -.1ex}%
+	{\centering\normalfont\large\bfseries}}
+
+\renewcommand\section{\@startsection {section}{1}{\z@}%
+	{-3.5ex \@plus -1ex \@minus -.2ex}%
+	{2.3ex \@plus.2ex}%
+	{\centering\normalfont\Large\bfseries\textsc}}
+\renewcommand\subsubsection{\@startsection {subsubsection}{1}{\z@}%
+	{-3.5ex \@plus -1ex \@minus -.2ex}%
+	{2.3ex \@plus.2ex}%
+	{\centering\normalfont\normalsize\bfseries}}
+\makeatother
+\newcommand{\indexStyle}{\textstyle}
+\makeatletter
+\renewcommand\part{%
+	\if@noskipsec \leavevmode \fi
+	\par
+	\addvspace{4ex}%
+	\@afterindentfalse
+	\secdef\@part\@spart}
+\def\@part[#1]#2{%
+	\ifnum \c@secnumdepth >\m@ne
+	\refstepcounter{part}%
+	\addcontentsline{toc}{part}{\thepart\hspace{1em}#1}%
+	\else
+	\addcontentsline{toc}{part}{#1}%
+	\fi
+	{\parindent \z@ \raggedright
+		\interlinepenalty \@M
+		\normalfont
+		\ifnum \c@secnumdepth >\m@ne
+		\centering\Large\bfseries \partname\nobreakspace\thepart
+		\par\nobreak
+		\fi
+		\huge \bfseries #2%
+		\markboth{}{}\par}%
+	\nobreak
+	\vskip 3ex
+	\@afterheading}
+\def\@spart#1{%
+	{\parindent \z@ \raggedright
+		\interlinepenalty \@M
+		\normalfont
+		\huge \bfseries #1\par}%
+	\nobreak
+	\vskip 3ex
+	\@afterheading}
+\makeatother 
+
+\makeatletter
+\AtBeginDocument{\renewcommand{\tableofcontents}{
+		\@cfttocstart
+		\par
+		\begingroup
+		\parindent\z@ \parskip\cftparskip\centering
+		\@cftmaketoctitle
+		\if@cfttocbibind
+		\@cftdobibtoc
+		\fi
+		\@starttoc{toc}%
+		\endgroup
+		\@cfttocfinish}
+	\makeatother}
+
+\begin{document}
+	\setlength{\abovedisplayskip}{3pt plus 3pt minus 2pt}
+	\setlength{\abovedisplayshortskip}{3pt plus 2pt minus 3pt}
+	\setlength{\belowdisplayskip}{3pt plus 3pt minus 2pt}
+	\setlength{\belowdisplayshortskip}{3pt plus 2pt minus 3pt}
+	\setlength{\textfloatsep}{1em plus .4em minus .3em}
+	\setlength{\abovecaptionskip}{0.5em plus .4em minus .1em}
+	\setlength{\belowcaptionskip}{0.5em plus .4em minus .1em}
+	\begin{titlepage}
+		\thispagestyle{empty}
+		\begin{center}
+			\LARGE{\textsc{Skolkovo Institute of Science and Technology}}\\
+			
+			\normalsize Center of Material Technologies\\
+			\vspace{6cm}
+			\Large
+			Project proposal\\
+			\LARGE{\textbf{«Supersonic flow in a chanel with a step.}}\\[.4em]
+			by A.S.~Kulikov»\\
+			\vspace{14cm}
+			\normalsize		
+			\begin{flushright}
+				\begin{tabular}{rl}
+					\\
+					\textbf{Lecturer:}\\
+					Prof. A.R.~Kasimov
+				\end{tabular}
+			\end{flushright}
+			\vfill
+			{Skolkovo\\
+				2024}
+		\end{center}
+	\end{titlepage}
+	\setcounter{page}{2}
+	
+	\newpage
+	
+	\part{Introduction}
+	In my project I would like to simmulate a nonstationary supersonic flow of a nonviscous gas in a step channel. Not only is this a theoretically and practically valuable representative of supersonic flow problems, but it was also introduced in 1968 by A.~Emery\cite{Emery} as a 2D test case for numerical methods in fluid dynamics. With time this problem gained public acknowledgement. In particular, a paper by P.~Woodward and P.~Colella \cite{Wood} is widely regarded for it. My goal is to explore the problem physics, solve it numerically and compare the obtained results with prior works \cite{Emery}-\cite{Isaev}.
+	
+	\part{Problem statement}
+	A perfect gas in a channel with an abrupt contention satisfies Euler equations:
+	\begin{equation}
+		\label{Euler}
+	\mathbf{U}_t+\mathbf{F}(\mathbf{U})_x+\mathbf{G}(\mathbf{U})_y=\mathbf{0},
+	\end{equation}
+	with
+	$$
+	\mathbf{U}=\left[\begin{array}{c}
+		\rho \\
+		\rho u \\
+		\rho v \\
+		E
+	\end{array}\right], \quad \mathbf{F}=\left[\begin{array}{c}
+		\rho u \\
+		\rho u^2+p \\
+		\rho u v \\
+		u(E+p)
+	\end{array}\right], \quad \mathbf{G}=\left[\begin{array}{c}
+		\rho v \\
+		\rho u v \\
+		\rho v^2+p \\
+		v(E+p)
+	\end{array}\right]
+	$$
+	And global initial conditions:
+	$$
+	\rho=\rho_0,\quad u=u_0~(\text{Mach 3 in \cite{Emery}-\cite{Isaev}}),\quad v=0,\quad p=p_0.
+	$$
+	The sizes of the channel in the non-dimensionalized length units are as follows: inlet height - 1, length - 3, outlet height - 0.8, step distance from the inlet - 0.6 (Fig.1). The channel is assumed to have an infinite width in the direction orthogonal to the plane of computation.
+	\par The following boundary conditions are applied:
+	\begin{enumerate}
+		\item Initial values on the left boundary.
+		\item Zero graidents on the right boundary (since the flow is always supersonic at the outlet, this condition doesn't affect the solution).
+		\item Reflection boundary conditions on the top and bottom walls.
+	\end{enumerate}
+	
+	
+	\part{Numeric methods}
+	
+	I want to begin with Lax–Friedrichs method to see for myself that it is not sufficient for such problems. Then Godunov method will be implemented with HLLC approximate Riemann solver \cite{Toro}. Dimension splitting will be used to solve the 2D problem. I am not yet sure about the high order method. But there is a WAF-Type method by Toro and Billet \cite{Toro2} applicabable to 2D non-linear time dependent Euler equations.
+
+	
+	\par Due to the fact that the step in the channel is rectangular, the computational mesh can be rectangular, even though the physical domain is not. However, there is a geometric singularity in the corner of the step. It is yet to be understood, how to correctly apply boundary conditions to it. It will also be of interest to see, how the solution changes if no mesh point match the corner.
+	\newpage
+	\part{Expected results}
+	 The problem does not have an analytical solution and, as mentioned in \cite{Wood}, "accuracy is a rather subjective quantity". So the main goal is obtaining the correct wave picture and mesh convergence. One of the challenging parts of the result is the contact discontinuity in the top part, which will show itself only in density profile.
+	 
+	 
+	 \begin{figure}[H]
+	 	\centering
+	 	\includegraphics[scale=0.5]{DensityWood4.jpg}
+	 	\caption{Non-dimensionalized density conturs at $t=4$, taken from \cite{Wood}.}
+	 	\label{ris:DensityWood4}
+	 \end{figure}
+	
+	
+	\begin{thebibliography}{0}
+		
+		\bibitem{Emery} Emery, A.~F. (1968). An Evaluation of Several Differencing Methods for lnviscid Fluid Flow Problems. In JOURNAL OF COMPUTATIONAL PHYSICS (Vol. 2).
+		\bibitem{Wood} Woodward, P., Colella, P. (1984). The numerical simulation of two-dimensional fluid flow with strong shocks. In Journal of Computational Physics (Vol. 54, Issue 1, pp. 115–173). 
+		\bibitem{Isaev} Isaev, S.~A., Lysenko, D.~A. (2004). Testing of the fluent package in calculation of supersonic flow in a step channel. Journal of Engineering Physics and Thermophysics, 77(4), 857–860. 
+		\bibitem{Toro} Toro, E.~F. (2006). Riemann solvers and numerical methods for fluid dynamics : a practical introduction. Springer.
+		\bibitem{Toro2} Toro, E.~F., Billett, S.~J. (1997). A Unified Riemann–Problem Based Extension of the Warming–Beam and Lax–Wendroff Schemes. IMA J. Numer. Anal., 17:61–102.
+	\end{thebibliography}
+
+\end{document}
