@@ -6,21 +6,21 @@ By=[0,1]; % Y boundaries
 T=0.2; % maximum time of computation
 % Method parameters
 method="HLLC";
-bc_left="reflect_x";%[rol,roul,rovl,El];
-bc_bot="reflect_y";
-bc_right="reflect_x";
-bc_top="reflect_y";
-[Flux_x, Flux_y, BC_l, BC_b, BC_r, BC_t]=choose_method(method,bc_left, bc_bot, bc_right, bc_top);
+[Flux_x, Flux_y]=choose_method(method);
 CFL=1/4;
 h=0.001; % space step
 k=h*CFL;% time step
 Nx=(Bx(2)-Bx(1))/h;
-Ny=3;
-[X,Y]=meshgrid(Bx(1):h:Bx(2),By(1):h:By(2));
-% Initialize values. %% Mind them being GPU arrays.
-[ro0, rou0, rov0, E0]=InitializeLR(Nx, Ny, gamma, 1, 0, 0, 1, 0.125, 0, 0, 0.1);
-%[ro0, rou0, rov0, E0]=InitializeCyl(Nx, Ny, 5/3, 1, 0, 0, 10,1, 0, 0, 0.1,X,Y);
-%[ro0, rou0, rov0, E0]=InitializeBT(Nx, Ny, gamma, 1, 0, 0, 1, 0.125, 0, 0, 0.1);
+Ny=(By(2)-By(1))/h;
+[X,Y]=meshgrid((Bx(1)+h/2):h:(Bx(2)-h/2),(By(1)+h/2):h:(By(2)-h/2));
+rob=1;roub=0;rovb=0;pb=1;
+rot=0.125;rout=0;rovt=0;pt=0.1;
+Eb=energy(rob,roub,rovb,pb,gamma);
+Et=energy(rot,rout,rovt,pt,gamma);
+ro0=gpuArray([rob*ones(Ny/2+1,Nx+2);rot*ones(Ny/2+1,Nx+2)]);
+rou0=gpuArray([roub*ones(Ny/2+1,Nx+2);rout*ones(Ny/2+1,Nx+2)]);
+rov0=gpuArray([rovb*ones(Ny/2+1,Nx+2);rovt*ones(Ny/2+1,Nx+2)]);
+E0=gpuArray([Eb*ones(Ny/2+1,Nx+2);Et*ones(Ny/2+1,Nx+2)]);
 % Visualization
 show=true;
 video2D=false;
@@ -29,7 +29,7 @@ video1Dy=false;
 if video2D
     figure("Position",[0,0,1500,1500])
     hold on
-    im_ptr=imagesc('XData',Bx,'YData',By,'CData',ro0);
+    im_ptr=imagesc('XData',Bx,'YData',By,'CData',ro0(2:end-1,2:end-1));
     xlim(Bx);
     ylim(By);
     clim([0.0,5]);
@@ -64,23 +64,30 @@ end
 % Start calculation
 t=0;
 while t<T
-    %% X - direction
-    % Apply boundary conditions using ghost points.
-    [ro_lb, rou_lb, rov_lb, E_lb]=BC_l(ro0(:,1),rou0(:,1),rov0(:,1),E0(:,1));
-    [ro_rb, rou_rb, rov_rb, E_rb]=BC_r(ro0(:,end),rou0(:,end),rov0(:,end),E0(:,end));
-    ro=[ro_lb,ro0,ro_rb];
-    rou=[rou_lb,rou0,rou_rb];
-    rov=[rov_lb,rov0,rov_rb];
-    E=[E_lb,E0,E_rb];
-    % Obtain next step values.
-    [ro0,rou0,rov0,E0]=solve_1d(ro, rou, rov, E, gamma, k, h, Flux_x,false);
-    %% Y - direction
-    % Apply boundary conditions using ghost points.
-    [ro_bb, rou_bb, rov_bb, E_bb]=BC_b(ro0(1,:),rou0(1,:),rov0(1,:),E0(1,:));
-    [ro_tb, rou_tb, rov_tb, E_tb]=BC_t(ro0(end,:),rou0(end,:),rov0(end,:),E0(end,:));
-    % Obtain next step values.
-    [ro0,rou0,rov0,E0]=solve_1d([ro_bb;ro0;ro_tb]', [rou_bb;rou0;rou_tb]', [rov_bb;rov0;rov_tb]', [E_bb;E0;E_tb]', gamma, k, h, Flux_y,1);
+    %% BC
+    ro0(2:end-1,1)=ro0(2:end-1,2);
+    rou0(2:end-1,1)=rou0(2:end-1,2);
+    rov0(2:end-1,1)=rov0(2:end-1,2);
+    E0(2:end-1,1)=E0(2:end-1,2);
 
+    ro0(2:end-1,end)=ro0(2:end-1,end-1);
+    rou0(2:end-1,end)=-rou0(2:end-1,end-1);
+    rov0(2:end-1,end)=rov0(2:end-1,end-1);
+    E0(2:end-1,end)=E0(2:end-1,end-1);
+
+    ro0(1,2:end-1)=ro0(2,2:end-1);
+    rou0(1,2:end-1)=rou0(2,2:end-1);
+    rov0(1,2:end-1)=rov0(2,2:end-1);
+    E0(1,2:end-1)=E0(2,2:end-1);
+
+    ro0(end,2:end-1)=ro0(end-1,2:end-1);
+    rou0(end,2:end-1)=rou0(end-1,2:end-1);
+    rov0(end,2:end-1)=rov0(end-1,2:end-1);
+    E0(end,2:end-1)=E0(end-1,2:end-1);
+   
+    %% Solve
+     [ro0(2:end-1,2:end-1),rou0(2:end-1,2:end-1),rov0(2:end-1,2:end-1),E0(2:end-1,2:end-1)]=...
+        solve_2d(ro0, rou0, rov0, E0, gamma, k, h, Flux_x,Flux_y);
     t=t+k;
     % Visualize.
     if video2D
@@ -108,26 +115,24 @@ while t<T
         drawnow;
     end
 end
+% 
 [roa, ua,pa]=analit(1,0.125,1,0.1,gamma, X(1,:), T);
-hs(end+1)=h;
-L1s(end+1)=L1(reshape(ro0(1,:)-roa,1,[]),h);
-L2s(end+1)=L2(reshape(ro0(1,:)-roa,1,[]),h);
-Linfs(end+1)=Linf(reshape(ro0(1,:)-roa,1,[]));
+L1(reshape(ro0(2:end-1,1)-roa',1,[]),h)
 if show
     figure("Position",[0,0,500,500])
     hold on
-    plot(X(1,:),ro0(1,:));
+    plot(X(1,:),ro0(2:end-1,1));
     plot(X(1,:),roa);
     title("Density")
     figure("Position",[0,600,500,500])
     p=pressure(ro0, rou0, rov0, E0,gamma);
-    plot(X(1,:),p(1,:));
+    plot(X(1,:),p(1,2:end-1));
     title("Pressure")
     figure("Position",[600,0,500,500])
-    plot(X(1,:),rou0(1,:)./ro0(1,:));
+    plot(X(1,:),rou0(1,2:end-1)./ro0(1,2:end-1));
     title("Velocity")
     figure("Position",[600,600,500,500])
-    plot(X(1,:),p(1,:)/(gamma-1)./ro0(1,:));
+    plot(X(1,:),p(1,2:end-1)/(gamma-1)./ro0(1,2:end-1));
     title("InternalEnergy")
 end
 

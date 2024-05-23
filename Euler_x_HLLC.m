@@ -12,16 +12,19 @@ q_L=sqrt(...
     );
 q_L(p_s<=p(:,1:end-1))=1;
 S_L=u(:,1:end-1)-a(:,1:end-1).*q_L;
+clear("q_L");
 q_R=sqrt(...
     1+(gamma+1)/(2*gamma)*(p_s./p(:,2:end)-1)...
     );
 q_R(p_s<=p(:,2:end))=1;
 S_R=u(:,2:end)+a(:,2:end).*q_R;
+clear("q_R","a","p_s");
 S=(p(:,2:end)-p(:,1:end-1)+ro(:,1:end-1).*u(:,1:end-1).*(S_L-u(:,1:end-1))-ro(:,2:end).*u(:,2:end).*(S_R-u(:,2:end)))./...
     (ro(:,1:end-1).*(S_L-u(:,1:end-1))-ro(:,2:end).*(S_R-u(:,2:end)));
 %% Step3
 P_LR=1/2*(p(:,2:end)+p(:,1:end-1)+ro(:,1:end-1).*(S_L-u(:,1:end-1)).*(S-u(:,1:end-1))+...
     ro(:,2:end).*(S_R-u(:,2:end)).*(S-u(:,2:end)));
+clear("p");
 SL_less=S_L<0;
 S_less=S<0;
 SR_less=S_R<0;
@@ -29,18 +32,20 @@ id_sL=SL_less&(~S_less);
 id_sR=S_less&(~SR_less);
 id_R=SR_less;
 % All fluxes options.
-F_ro=f_ro(:,1:end-1);
-F_rou=f_rou(:,1:end-1);
-F_rov=f_rov(:,1:end-1);
-F_E=f_E(:,1:end-1);
 F_ro_sL=S.*(S_L.*ro(:,1:end-1)-f_ro(:,1:end-1))./(S_L-S);
 F_rou_sL=(S.*(S_L.*rou(:,1:end-1)-f_rou(:,1:end-1))+S_L.*P_LR)./(S_L-S);
 F_rov_sL=S.*(S_L.*rov(:,1:end-1)-f_rov(:,1:end-1))./(S_L-S);
 F_E_sL=(S.*(S_L.*E(:,1:end-1)-f_E(:,1:end-1))+S_L.*P_LR.*S)./(S_L-S);
+clear("S_L");
 F_ro_sR=S.*(S_R.*ro(:,2:end)-f_ro(:,2:end))./(S_R-S);
 F_rou_sR=(S.*(S_R.*rou(:,2:end)-f_rou(:,2:end))+S_R.*P_LR)./(S_R-S);
 F_rov_sR=S.*(S_R.*rov(:,2:end)-f_rov(:,2:end))./(S_R-S);
 F_E_sR=(S.*(S_R.*E(:,2:end)-f_E(:,2:end))+S_R.*P_LR.*S)./(S_R-S);
+clear("S_R","S","P_LR");
+F_ro=f_ro(:,1:end-1);
+F_rou=f_rou(:,1:end-1);
+F_rov=f_rov(:,1:end-1);
+F_E=f_E(:,1:end-1);
 F_ro_R=f_ro(:,2:end);
 F_rou_R=f_rou(:,2:end);
 F_rov_R=f_rov(:,2:end);

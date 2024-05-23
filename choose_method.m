@@ -8,9 +8,16 @@ switch method
         Flux_x=@(ro, rou, rov, E, gamma, k, h)Euler_x_HLLC(ro, rou, rov, E, gamma, k, h);
         Flux_y=@(ro, rou, rov, E, gamma, k, h)Euler_y_HLLC(ro, rou, rov, E, gamma, k, h);
 end
-BC_l=choose_bc(bc_left);
-BC_b=choose_bc(bc_bot);
-BC_r=choose_bc(bc_right);
-BC_t=choose_bc(bc_top);
+if nargin>1
+    BC_l=choose_bc(bc_left);
+    BC_b=choose_bc(bc_bot);
+    BC_r=choose_bc(bc_right);
+    BC_t=choose_bc(bc_top);
+else
+    BC_l=[];
+    BC_b=[];
+    BC_r=[];
+    BC_t=[];
+end
 end
 

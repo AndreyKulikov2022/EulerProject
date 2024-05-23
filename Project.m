@@ -1,4 +1,4 @@
-%% Channel with a step
+ %% Channel with a step
 % Problem parameters
 gamma = 1.4; % adiabatic gas constant
 ro_i=1.4;
@@ -19,18 +19,18 @@ bc_bot="reflect_y";
 bc_top="reflect_y";
 [Flux_x, Flux_y, BC_x1, BC_b, BC_x2, BC_t]=choose_method(method,bc_x1, bc_bot, bc_x2, bc_top);
 CFL=1/6;
-h=0.0005; % space step
+h=0.005; % space step
 k=h*CFL;% time step
 Nx=(Bx(2)-Bx(1))/h;
 Ny=(By(2)-By(1))/h;
-nx_step=step_x/h+1;
-ny_step=step_y/h+1;
+nx_step=round(step_x/h)+1;
+ny_step=round(step_y/h)+1;
 %[X,Y]=meshgrid(Bx(1):h:Bx(2),By(1):h:By(2));
 %% Initialize data
-ro0=gpuArray(ro_i*ones(Ny+1,Nx+1));
-rou0=gpuArray(rou_i*ones(Ny+1,Nx+1));
-rov0=gpuArray(rov_i*ones(Ny+1,Nx+1));
-E0=gpuArray(E_i*ones(Ny+1,Nx+1));
+ro0=gpuArray(single(ro_i*ones(Ny+1,Nx+1)));
+rou0=gpuArray(single(rou_i*ones(Ny+1,Nx+1)));
+rov0=gpuArray(single(rov_i*ones(Ny+1,Nx+1)));
+E0=gpuArray(single(E_i*ones(Ny+1,Nx+1)));
 % boundary helper arrays
 ro_lb=ro_i*ones(ny_step-1,1);
 rou_lb=rou_i*ones(ny_step-1,1);
@@ -46,19 +46,19 @@ if video2D
     figure("Position",[0,0,1000*(Bx(end)-Bx(1))/(By(end)-By(1)),1000])
     hold on
     h_t=annotation('textbox',[.15 .6 .3 .3],'String','T = 0','FitBoxToText','on','FaceAlpha',0);
-    im_ptr=imagesc('XData',Bx,'YData',By,'CData',rou0);
+    im_ptr=imagesc('XData',Bx,'YData',By,'CData',ro0);
     xlim(Bx);
     ylim(By);
     clim([0.0,8]);
     colormap(turbo);
     %colormap(flipud(turbo));
     colorbar
-%     testGIF='Project.gif';
-%     F=getframe(gcf);
-%     im=frame2im(F);
-%     [imind,cm] = rgb2ind(im,128);
-%     imwrite(imind,cm,testGIF,'gif','DelayTime',k, 'Loopcount',inf);
-%     draw_count=3;
+    testGIF='Project.gif';
+    F=getframe(gcf);
+    im=frame2im(F);
+    [imind,cm] = rgb2ind(im,128);
+    imwrite(imind,cm,testGIF,'gif','DelayTime',k, 'Loopcount',inf);
+    draw_count=8;
 end
 % Start calculation
 t=0;
@@ -105,24 +105,25 @@ while t<T
     if video2D
         delete(im_ptr);
         h_t.String=['T = ',num2str(t)];
-        im_ptr=imagesc('XData',Bx,'YData',By,'CData',rou0);
+        im_ptr=imagesc('XData',Bx,'YData',By,'CData',ro0);
         drawnow;
-%         if draw_count==3
-%         F=getframe(gcf);
-%         im=frame2im(F);
-%         [imind,cm] = rgb2ind(im,256);
-%         imwrite(imind,cm,testGIF,'gif','DelayTime',k,'WriteMode','append');
-%         draw_count=0;
-%         else
-%             draw_count=draw_count+1;
-%         end
+        if draw_count==8
+        F=getframe(gcf);
+        im=frame2im(F);
+        [imind,cm] = rgb2ind(im,256);
+        imwrite(imind,cm,testGIF,'gif','DelayTime',k,'WriteMode','append');
+        draw_count=0;
+        else
+            draw_count=draw_count+1;
+        end
     end
 end
 
 % figure("Position",[0,0,1000*(Bx(end)-Bx(1))/(By(end)-By(1)),1000])
 % hold on
-% h_t=annotation('textbox',[.15 .6 .3 .3],'String','T = num2str(t)','FitBoxToText','on','FaceAlpha',0);
+% h_t=annotation('textbox',[.15 .6 .3 .3],'String',['T = ',num2str(t)],'FitBoxToText','on','FaceAlpha',0);
 % im_ptr=imagesc('XData',Bx,'YData',By,'CData',pressure(ro0,rou0,rov0,E0,gamma)./(ro0.^gamma));
+%plot(polyshape([step_x,Bx(end),Bx(end),step_x],[By(1),By(1),step_y,step_y]),'FaceColor','black')
 % xlim(Bx);
 % ylim(By);
 % clim([0.5,2]);

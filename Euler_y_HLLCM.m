@@ -1,4 +1,4 @@
-function [F_ro,F_rou,F_rov,F_E]=Euler_y_HLLC(ro, rou, rov, E, gamma, k, h)
+function [F_ro,F_rou,F_rov,F_E]=Euler_y_HLLCM(ro, rou, rov, E, gamma, k, h)
 [f_ro,f_rou,f_rov,f_E,p]=Euler_y(ro,rou,rov,E,gamma);
 v=rov./ro; % the method in x direction is almsot the same with changing v to u and chaning resulting fluxes a bit
 a=sqrt(gamma*p./ro);

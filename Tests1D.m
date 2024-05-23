@@ -3,24 +3,34 @@
 gamma = 1.4; % adiabatic gas constant
 Bx=[0,1]; % X boundaries
 By=[0,1]; % Y boundaries
-T=0.2; % maximum time of computation
 % Method parameters
+direction="y";%1D direction
 method="HLLC";
-bc_left="reflect_x";%[rol,roul,rovl,El];
-bc_bot="reflect_y";
-bc_right="reflect_x";
-bc_top="reflect_y";
+bc_left="zero_gradient";%[rol,roul,rovl,El];
+bc_bot="zero_gradient";
+bc_right="zero_gradient";
+bc_top="zero_gradient";
 [Flux_x, Flux_y, BC_l, BC_b, BC_r, BC_t]=choose_method(method,bc_left, bc_bot, bc_right, bc_top);
-CFL=1/4;
-h=0.001; % space step
-k=h*CFL;% time step
+h=0.01; % space step
 Nx=(Bx(2)-Bx(1))/h;
-Ny=3;
+Ny=(By(2)-By(1))/h;
 [X,Y]=meshgrid(Bx(1):h:Bx(2),By(1):h:By(2));
 % Initialize values. %% Mind them being GPU arrays.
-[ro0, rou0, rov0, E0]=InitializeLR(Nx, Ny, gamma, 1, 0, 0, 1, 0.125, 0, 0, 0.1);
+%rol=1;roul=0;rovl=0;pl=1;ror=0.125;rour=0;rovr=0;pr=0.1;T=0.2;x0=0.3;%Test1
+rol=1;roul=-2;rovl=0;pl=0.4;ror=1;rour=2;rovr=0;pr=0.4;T=0.15;x0=0.5;%Test2
+%rol=1;roul=0;rovl=0;pl=1000;ror=1;rour=0;rovr=0;pr=0.01;T=0.012;x0=0.5;%Test3
+%rol=5.99924;roul=19.5975*rol;rovl=0;pl=460.894;ror=5.99242;rour=-6.19633*ror;rovr=0;pr=46.0950;T=0.035;x0=0.4;%Test4
+%rol=1;roul=-19.59745;rovl=0;pl=1000;ror=1;rour=-19.59745;rovr=0;pr=0.01;T=0.012;x0=0.8;%Test5
+if direction=="x"
+[ro0, rou0, rov0, E0]=InitializeLR(Nx, Ny, gamma, rol, roul, 0, pl,ror, rour, 0, pr,x0);
+elseif direction=="y"
+[ro0, rou0, rov0, E0]=InitializeBT(Nx, Ny, gamma, rol, 0, roul, pl,ror, 0, rour, pr,x0);
+end
 %[ro0, rou0, rov0, E0]=InitializeCyl(Nx, Ny, 5/3, 1, 0, 0, 10,1, 0, 0, 0.1,X,Y);
 %[ro0, rou0, rov0, E0]=InitializeBT(Nx, Ny, gamma, 1, 0, 0, 1, 0.125, 0, 0, 0.1);
+Smax=max(max((abs(rou0./ro0)+sqrt(gamma*pressure(ro0,rou0,rov0,E0,gamma)./ro0)),[],"all"),max((abs(rov0./ro0)+sqrt(gamma*pressure(ro0,rou0,rov0,E0,gamma)./ro0)),[],"all"));
+CFL=1/2;
+k=h*CFL/Smax;% time step
 % Visualization
 show=true;
 video2D=false;
@@ -82,6 +92,9 @@ while t<T
     [ro0,rou0,rov0,E0]=solve_1d([ro_bb;ro0;ro_tb]', [rou_bb;rou0;rou_tb]', [rov_bb;rov0;rov_tb]', [E_bb;E0;E_tb]', gamma, k, h, Flux_y,1);
 
     t=t+k;
+    if(t+k>T)
+    k=T-t+0.000001;
+    end
     % Visualize.
     if video2D
         delete(im_ptr);
@@ -108,16 +121,16 @@ while t<T
         drawnow;
     end
 end
-[roa, ua,pa]=analit(1,0.125,1,0.1,gamma, X(1,:), T);
-hs(end+1)=h;
-L1s(end+1)=L1(reshape(ro0(1,:)-roa,1,[]),h);
-L2s(end+1)=L2(reshape(ro0(1,:)-roa,1,[]),h);
-Linfs(end+1)=Linf(reshape(ro0(1,:)-roa,1,[]));
-if show
+% [roa, ua,pa]=analit(1,0.125,1,0.1,gamma, X(1,:), T);
+% hs(end+1)=h;
+% L1s(end+1)=L1(reshape(ro0(1,:)-roa,1,[]),h);
+% L2s(end+1)=L2(reshape(ro0(1,:)-roa,1,[]),h);
+% Linfs(end+1)=Linf(reshape(ro0(1,:)-roa,1,[]));
+if show && direction=="x"
     figure("Position",[0,0,500,500])
     hold on
-    plot(X(1,:),ro0(1,:));
-    plot(X(1,:),roa);
+    plot(X(10,:),ro0(1,:));
+    %plot(X(1,:),roa);
     title("Density")
     figure("Position",[0,600,500,500])
     p=pressure(ro0, rou0, rov0, E0,gamma);
@@ -128,6 +141,23 @@ if show
     title("Velocity")
     figure("Position",[600,600,500,500])
     plot(X(1,:),p(1,:)/(gamma-1)./ro0(1,:));
+    title("InternalEnergy")
+end
+if show && direction == "y"
+ figure("Position",[1200,0,500,500])
+    hold on
+    plot(Y(:,1),ro0(:,1));
+    %plot(X(1,:),roa);
+    title("Density")
+    figure("Position",[1200,600,500,500])
+    p=pressure(ro0, rou0, rov0, E0,gamma);
+    plot(Y(:,1),p(:,1));
+    title("Pressure")
+    figure("Position",[1800,0,500,500])
+    plot(Y(:,1),rov0(:,1)./ro0(:,1));
+    title("Velocity")
+    figure("Position",[1800,600,500,500])
+    plot(Y(:,1),p(:,1)/(gamma-1)./ro0(:,1));
     title("InternalEnergy")
 end
 
